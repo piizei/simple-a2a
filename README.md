@@ -2,6 +2,14 @@
 
 This repository demonstrates a multi-agent blog writing system using  **Semantic Kernel** communicating over the **Agent-to-Agent (A2A) protocol**. The system consists of three specialized agents that collaborate to create high-quality blog articles.
 
+
+##
+TL;DR
+```bash
+./start_all.sh
+```
+Then http://localhost:8000
+
 ## 🏗️ Architecture
 
 The system implements a distributed agent architecture where remote agents expose their capabilities through the A2A protocol, and a local coordinator orchestrates their collaboration.
