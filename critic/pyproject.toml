@@ -1,0 +1,19 @@
+[project]
+name = "critic"
+version = "0.1.0"
+description = "Blog critic agent using Semantic Kernel"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "semantic-kernel>=1.0.0",
+    "a2a-sdk>=0.2.2",
+    "click>=8.1.0",
+    "uvicorn>=0.32.1",
+    "python-dotenv>=1.0.1",
+    "pydantic>=2.10.3",
+    "httpx>=0.28.1",
+    "starlette>=0.41.0",
+    "typing-extensions>=4.12.2",
+    "uvicorn>=0.34.0",
+    "python-multipart"
+]

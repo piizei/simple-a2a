@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Writing Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            color: #e2e8f0;
+        }
+        
+        .container {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 24px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }        
+        .header {
+            padding: 30px 40px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        h2 {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-top: 8px;
+            font-weight: 300;
+        }
+        
+        #chat-body {
+            flex: 1;
+            padding: 20px 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+        
+        #chat-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #chat-body::-webkit-scrollbar-track {
+            background: rgba(148, 163, 184, 0.1);
+            border-radius: 10px;
+        }
+        
+        #chat-body::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+        }
+        
+        #chat-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
+        
+        .chat-message {
+            padding: 20px 24px;
+            border-radius: 20px;
+            max-width: 85%;
+            word-wrap: break-word;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            position: relative;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        }
+        
+        .agent-message {
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            color: #e2e8f0;
+            align-self: flex-start;
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .agent-message h1, .agent-message h2, .agent-message h3,
+        .agent-message h4, .agent-message h5, .agent-message h6 {
+            color: #f1f5f9;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        
+        .agent-message h1 { font-size: 1.5em; }
+        .agent-message h2 { font-size: 1.3em; }
+        .agent-message h3 { font-size: 1.1em; }
+        
+        .agent-message p {
+            margin-bottom: 1em;
+        }
+        
+        .agent-message ul, .agent-message ol {
+            margin-left: 1.5em;
+            margin-bottom: 1em;
+        }
+        
+        .agent-message li {
+            margin-bottom: 0.5em;
+        }
+        
+        .agent-message code {
+            background: rgba(15, 23, 42, 0.8);
+            color: #64ffda;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+        
+        .agent-message pre {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 1em 0;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+        
+        .agent-message blockquote {
+            border-left: 4px solid #6366f1;
+            padding-left: 16px;
+            margin: 1em 0;
+            font-style: italic;
+            color: #cbd5e1;
+        }
+        
+        .input-container {
+            padding: 20px 40px 30px;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            background: rgba(15, 23, 42, 0.3);
+        }
+        
+        form {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 16px 20px;
+            background: rgba(51, 65, 85, 0.8);
+            border: 2px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            resize: none;
+            min-height: 24px;
+            max-height: 120px;
+        }
+        
+        input[type="text"]::placeholder {
+            color: #64748b;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            background: rgba(51, 65, 85, 0.9);
+        }
+        
+        button[type="submit"] {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+            min-width: 100px;
+        }
+        
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4);
+        }
+        
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+        
+        button[type="submit"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 16px 24px;
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 20px;
+            border-bottom-left-radius: 6px;
+            max-width: 85%;
+            align-self: flex-start;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #64748b;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                height: 95vh;
+                border-radius: 16px;
+            }
+            
+            .header {
+                padding: 20px 24px 16px;
+            }
+            
+            h2 {
+                font-size: 2rem;
+            }
+            
+            #chat-body {
+                padding: 16px 24px;
+                gap: 16px;
+            }
+            
+            .input-container {
+                padding: 16px 24px 20px;
+            }
+            
+            .chat-message {
+                padding: 16px 20px;
+                max-width: 90%;
+                font-size: 0.9rem;
+            }
+            
+            form {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            button[type="submit"] {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Blog Writing Assistant</h2>
+            <p class="subtitle">AI-powered content creation at your fingertips</p>
+        </div>
+
+        <div id="chat-body">
+            <div class="chat-message agent-message">
+                <p>👋 <strong>Welcome!</strong> I'm your AI blog writing assistant. I can help you create engaging, well-structured blog posts on any topic.</p>
+                <p>Just tell me what you'd like to write about, and I'll craft a comprehensive blog article for you. Try something like:</p>
+                <ul>
+                    <li><em>"Write a blog about sustainable living"</em></li>
+                    <li><em>"Create an article about remote work productivity"</em></li>
+                    <li><em>"Write about the future of artificial intelligence"</em></li>
+                </ul>
+            </div>
+            <div class="typing-indicator" id="typing-indicator">
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <form id="booking-form">
+                <input type="text" name="user_input" placeholder="What would you like me to write about?" autocomplete="off" id="user-input">
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>    <script>
+        // Configure marked for better markdown rendering
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: false,
+            mangle: false
+        });
+
+        const bookingForm = document.getElementById('booking-form');
+        const userInputField = document.getElementById('user-input');
+        const chatBody = document.getElementById('chat-body');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const submitButton = bookingForm.querySelector('button[type="submit"]');
+
+        // Function to add a message to the chat body
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('chat-message');
+            
+            if (sender === 'user') {
+                messageDiv.classList.add('user-message');
+                messageDiv.textContent = text;
+            } else if (sender === 'agent') {
+                messageDiv.classList.add('agent-message');
+                // Parse markdown for agent messages
+                messageDiv.innerHTML = marked.parse(text);
+                
+                // Highlight code blocks if Prism is available
+                if (typeof Prism !== 'undefined') {
+                    setTimeout(() => {
+                        Prism.highlightAllUnder(messageDiv);
+                    }, 100);
+                }
+            }
+            
+            // Remove typing indicator if it exists
+            typingIndicator.style.display = 'none';
+            
+            chatBody.appendChild(messageDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            typingIndicator.style.display = 'block';
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            typingIndicator.style.display = 'none';
+        }
+
+        // Handle Enter key for sending messages
+        userInputField.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                bookingForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        bookingForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const userText = userInputField.value.trim();
+            if (userText === '') {
+                return;
+            }
+
+            // Disable form while processing
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending...';
+
+            // Display user's message
+            addMessage(userText, 'user');
+            userInputField.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `user_input=${encodeURIComponent(userText)}`
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log("Agent raw response:", data);
+
+                if (data && data.response) {
+                    const agentMessage = data.response;
+                    addMessage(agentMessage, 'agent');
+                } else {
+                    addMessage("I apologize, but I couldn't generate a proper response. Please try again.", 'agent');
+                }
+
+            } catch (error) {
+                console.error('Error sending message or parsing response:', error);
+                addMessage("❌ **Connection Error**\n\nI'm having trouble connecting to the blog writing service. Please check that all agents are running and try again.", 'agent');
+            } finally {
+                // Re-enable form
+                hideTypingIndicator();
+                submitButton.disabled = false;
+                submitButton.textContent = 'Send';
+                userInputField.focus();
+            }
+        });
+
+        // Focus the input field when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            userInputField.focus();
+        });
+    </script>
+</body>
+</html>
