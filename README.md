@@ -5,7 +5,10 @@ This repository demonstrates a multi-agent blog writing system using  **Semantic
 
 ##
 TL;DR
+
 ```bash
+cp .env.example .env
+# Edit azure-openai connection details to .env
 ./start_all.sh
 ```
 Then http://localhost:8000
